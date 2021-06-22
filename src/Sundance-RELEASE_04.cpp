@@ -125,7 +125,7 @@ bool switchState,
 uint16_t tempRXcount=0;    
 uint32_t SampleTime_1 = 0, SampleTime_2 = 0, StatusUpdtTime = 0, tempRXCheck = 0;
 uint32_t StatusInterval = 1500, SampleInterval = 5000, BootTIme, timeNow;
-uint32_t tempRXInterval = 20000;
+uint32_t tempRXInterval = 29000, tempRXTimeLeft = 0;
 int variable1 = 0; // This is a simple variable to  increasing a number to have something dynamic to show on the displa
 
 int CurrentPage = 0; // Create a variable to store which page is currently loaded
@@ -228,7 +228,7 @@ uint8_t PumpCircLatch = 0;
 //  protoypes
 
 void publishState(char *message, bool state);
-
+void  resetSensorCheck();
 void updatePump1(byte *message, u_int8_t len);
 void updatePump2(byte *message, u_int8_t len);
 void updateBlower(byte *message, u_int8_t len);
@@ -418,6 +418,7 @@ void updatePumpCirc(byte *message, u_int8_t len)
   publishState("P1AM/sta/PumpCirc", state);
   PumpCircLatch = state;
   CircIndicator(state);
+  resetSensorCheck();
 }
 
 
@@ -431,17 +432,13 @@ void updateOzone(byte *message, u_int8_t len)
 
 void updateTempSet(byte *message, u_int8_t len)
 {
-
-  /* char p[len + 1];
-    memcpy(p, message, len);
-    p[len] = NULL;
-*/
   
   float newset;
 
 
   char *p = (char *)malloc(sizeof(byte) * len);
   memcpy(p, message, len);
+  p[len] = 0x00;
 
   String value(p);
   newset = value.toFloat();
@@ -449,16 +446,16 @@ void updateTempSet(byte *message, u_int8_t len)
   if ((newset > TminSet) && (newset < TmaxSet))
   {
     Serial.println(value);
-    float tempSetpoint = value.toFloat();
+    tempSetpoint = newset;
     mqtt.publish("P1AM/sta/setT", String(tempSetpoint, 1).c_str());
+    start_flash_temp();
   }
 
 
-  start_flash_temp();
   free(p);
 }
 
-/////////////////////////////////////////////////////////////////// Callbacks
+////////////////////////////////////////////f/////////////////////// Callbacks
 
 //--------------------------------------------------------------------END  CALLBACK
 
@@ -478,7 +475,7 @@ void receiveEvent(int howMany)
 /////////////////////////////////////////////////////////////////
 
 void onButtonEvent()
-{
+{xxx  
   /*
   SampleTime_1 = millis() + SampleInterval/2;
   SampleTime_2 = millis() + SampleInterval;
@@ -954,10 +951,21 @@ void reconnect()
   }
 }
 
+ void resetSensorCheck()
+ {
+  tempPlausible= true; 
+  tempRXcount=0;
+  tempRXCheck = timeNow + 2000 + tempRXInterval;
+ }
+
+
+
+
+
 void setup()
 { // Put your setup code here, to run once:
   BootTIme = millis();
-
+  tempPlausible= true; tempRXcount=4;
   Serial.begin(115200); //initialize serial communication at 115200 bits per second
   while (!P1.init())
   {
@@ -1025,13 +1033,13 @@ void setup()
   HeaterSym(bt2latch);
 
 
-  Wire.begin(8);                // join i2c bus with address #4
+  Wire.begin(8);               // join i2c bus with address #4
   Wire.onReceive(receiveEvent); // register event
 
   updateFromPage1();
   SampleTime_1 = millis() + 100;
   SampleTime_2 = millis() + 100 + SampleInterval / 2;
-  tempRXCheck = millis() + 5000;
+  tempRXCheck = 0;
 
   // call the toggle_led function every 500 millis (half second)
   //timer.every(500, toggle_led);
@@ -1151,6 +1159,8 @@ void loop()
     haveData = false;
 
     tempRXcount++;
+      if (!tempRXCheck) tempRXCheck = timeNow + 7000 + tempRXInterval;
+      if (tempRXcount == 4) tempRXTimeLeft = tempRXCheck - millis();
   }
 
   if (SampleTime_1 < timeNow)
@@ -1169,7 +1179,7 @@ void loop()
     // hltTemp = P1.readTemperature(2, 1);  //Return temperature read from channel 1 of the input module in slot 2
     hltStr = String(tubTemp);
     hltStr.toCharArray(hltChar, hltStr.length());
-    mqtt.publish("P1AM/tubTemp", hltChar);
+
     Serial.print("Tub Temperature: ");
     Serial.println(tubTemp, 2); //print the value in degrees Fahrenheit up to 2 decimal places
 
@@ -1178,7 +1188,7 @@ void loop()
 
   if (SampleTime_2 < timeNow)
   {
-    //requeststatus = rs_complete;
+    //requeststatus = rs_cmomplete;
 
     SampleTime_2 = timeNow + SampleInterval;
     // call sensors.requestTemperatures() to issue a global temperature
@@ -1192,14 +1202,9 @@ void loop()
     printData(heaterSensorAddress);
     heaterTemp = getTempF(heaterSensorAddress);
 */
-    hltStr = String(heaterTemp);
-    hltStr.toCharArray(hltChar, hltStr.length());
-    mqtt.publish("P1AM/sta/heaterTemp", hltChar);
-
-
-    hltStr = String(addTemp);
-    hltStr.toCharArray(hltChar, hltStr.length());
-    mqtt.publish("P1AM/sta/heaterTemp", hltChar);
+  
+    mqtt.publish("P1AM/sta/heaterTemp", String(addTemp).c_str());
+    mqtt.publish("P1AM/sta/tubTemp", String(tubTemp).c_str());
 
 
     // We are going to send the varable value to the object called n0:
@@ -1207,12 +1212,13 @@ void loop()
   }
 
   if (tempRXCheck < timeNow)
-  {
+  { 
     tempRXCheck = timeNow + tempRXInterval;
 
     if (tempRXcount <3) {
         tempPlausible = false;
-    } 
+    }
+     
     tempRXcount  = 0;
   }
   if (StatusUpdtTime < timeNow)
@@ -1234,14 +1240,16 @@ void loop()
   
       
   flagFlow = switchState;
-  FlowIndicator(flagFlow);
-  Serial.println("pumpcirclatch: flagfloe, tempePlausible  tempRXcoun");
+  FlowIndicator(!flagFlow);
+  Serial.println("pumpcirclatch: flagfloe, tempePlausible  tempRXcount  tempRXTimeleft");
 
 
   Serial.println(String(PumpCircLatch)+" | "+String(flagFlow)
-          +" | "+String(tempPlausible)+" | "+String(tempRXcount));
-   if (((tubTemp + 0.5 < tempSetpoint) && PumpCircLatch &&
-  flagFlow))
+          +" | "+String(tempPlausible)+" | "+String(tempRXcount)+" | "+String(tempRXTimeLeft));
+
+
+   if ((((tubTemp -0.3 < tempSetpoint) || ((tubTemp + 0.1 < tempSetpoint)))
+        && PumpCircLatch &&  flagFlow  && tempPlausible))
     {
       activeHeat(53620);
       P1.writeDiscrete(1,1,relayHeater);
@@ -1251,7 +1259,7 @@ void loop()
     {
       HeaterSym(false);
       P1.writeDiscrete(0,1,relayHeater);
-      activeHeat(458);
+      activeHeat(568);
     }
   }
   /*   Serial1.print("n0.val=");  // This is se   the nextion display to set what object name (before the dot) and what atribute (after the dot) are you going to change.
@@ -1261,3 +1269,4 @@ void loop()
      Serial1.write(0xff);
   */
   // We are going to change the color of the progress bar to red if the variable is greater than 49, and change to green if is below 50:
+}  // the end
