@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "iosfwd": "cpp",
+        "xlocale": "cpp",
+        "xstring": "cpp",
+        "string_view": "cpp",
+        "memory": "cpp",
+        "*.tcc": "cpp"
+    },
+    "openhab.useRestApi": false
+}
