@@ -1,0 +1,6 @@
+WIRING NEXTION
+
+PURPLE    RED       +5V
+GREY      BLACK      0V
+GREEN     BLUE      TX
+BLUE      YELLOW    RX      

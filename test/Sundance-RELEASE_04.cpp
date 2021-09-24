@@ -326,6 +326,13 @@ void CircIndicator(bool vis)
   Serial1.write(0xff);  Serial1.write(0xff);  Serial1.write(0xff);
 }
 
+void ChemIndicator(bool vis)
+{
+  Serial1.write("vis t12,");    //  nextion CHEMICALS
+  Serial1.write(0x30 + (uint8_t)vis);
+  Serial1.write(0xff);  Serial1.write(0xff);  Serial1.write(0xff);
+}
+
 void setButtonStates()
 {
   bt1.setValue(bt1state);
@@ -475,11 +482,11 @@ void receiveEvent(int howMany)
 /////////////////////////////////////////////////////////////////
 
 void onButtonEvent()
-{xxx  
+{
   /*
   SampleTime_1 = millis() + SampleInterval/2;
   SampleTime_2 = millis() + SampleInterval;
- */
+*/
 }
 
 void GetNTPsetRTC()
@@ -906,6 +913,11 @@ void initPage0()
   Serial1.write(0xff);
 
   Serial1.write("vis t11,0"); //  nextion RECIRCULATE
+  Serial1.write(0xff);
+  Serial1.write(0xff);
+  Serial1.write(0xff);
+  
+  Serial1.write("vis t12,0"); //  nextion CHEMICALS
   Serial1.write(0xff);
   Serial1.write(0xff);
   Serial1.write(0xff);
