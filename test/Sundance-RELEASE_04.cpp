@@ -249,7 +249,7 @@ inline String BoolToString(bool b)
   return b ? "true" : "false";
 }
 
-void SnowMan(bool vis)
+void SnowNan(bool vis)
 {
   Serial1.write("vis t10,"); //  nextion SNOW MAN
   Serial1.write(0x30 + (uint8_t)vis);

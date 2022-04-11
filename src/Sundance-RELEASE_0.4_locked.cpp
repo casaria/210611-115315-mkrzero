@@ -19,10 +19,20 @@
 
 #include <PubSubClient.h>
 #include <SPI.h>
+
 #include <Ethernet.h>
+#include <EthernetClient.h>
+
 #include <SD.h>
-#include <NTP.h>
+#include <TimeLib.h>
+#include <NTPClient.h>
+//#include <WiFiUdp.h>
+#include <ArduinoJson.h>
 #include <arduino-timer.h>
+//#include <HTTPClient.h>
+//DNSServer.h>
+
+
 
 /*
   Uart Serial2 (&sercom1, 11, 10, SERCOM_RX_PAD_0, UART_TX_PAD_2);
@@ -84,6 +94,15 @@ EthernetClient ethClient;
 PubSubClient mqtt(ethClient);
 String localIP;
 
+//TimeZone variables
+String TZAPIKEY = "WO3E5U09CCNS"; //http://timezonedb.com used to get gmtOffset
+String payload, TZone, lastUpdate;
+String coordinate; // = lat,lon
+String coordinateTZ; //lat=xx.xxx&lng=xxx.xxx
+long  gmtOffset_sec;
+const int   daylightOffset_sec = 3600;
+
+
 float TmaxSet = 106;
 float TminSet = 80;
 
@@ -101,6 +120,9 @@ auto timerBlower = timer_create_default(); //
 auto timerOZwait = timer_create_default(); //
 auto timerOZon = timer_create_default();   //
 uintptr_t tsk_blower, tsk_animate, tsk_edit;
+
+//WiFiUDP ntpUDP;
+//NTPClient timeClient(ntpUDP);
 
 bool ButtonPushed = false;
 // create a9 timer that hold  s 16 tasks, with millisecond resolution,
@@ -126,7 +148,7 @@ int variable1 = 0; // This is a simple variable to  increasing a number to have 
 
 int CurrentPage = 0; // Create a variable to store which page is currently loaded
 
-float tempSetpoint = 100.0;
+float tempSetpoint = 101.0;
 
 volatile struct STRUCT
 {
@@ -225,13 +247,15 @@ uint32_t bt7state = 0; // Create variable to store value we are going to get
 uint8_t bt1latch = 0, bt2latch = 0, bt3latch = 0, bt4latch = 0, bt5latch = 0;
 uint8_t bt0latch = 0, bt8latch = 0, bt7latch = 0;
 
+bool heaterLatch = false;
+bool heaterOFF = true;
 // auto beat = t_timer;
 // auto flashLCD = t_timer;
 
 /********************************/
 //  protoypes
 
-void publishState(char *message, bool state);
+void publishState(char *message, bool state, bool retained);
 void resetSensorCheck();
 void updatePump1(byte *message, u_int8_t len);
 void updatePump2(byte *message, u_int8_t len);
@@ -277,7 +301,7 @@ void HeaterSym(bool vis)
     Serial1.write(0xff);
     Serial1.write(0xff);
     Serial1.write(0xff);
-    publishState("P1AM/sta/Heater", vis);
+    publishState("P1AM/sta/Heater", vis, true);
 }
 
 void activeHeat(uint32_t pco)
@@ -343,7 +367,7 @@ void FlowIndicator(bool vis)
     Serial1.write(0xff);
     Serial1.write(0xff);
     Serial1.write(0xff);
-    publishState("P1AM/sta/NoFLow", vis);
+    publishState("P1AM/sta/NoFLow", vis,true);
 }
 
 void StatusText (String msg)
@@ -454,7 +478,7 @@ bool blowerTO(void *)
     bt3state = (uint8_t)state;
     bt3latch = (uint8_t)state;
     bt3.setValue(bt3state);
-    publishState("P1AM/sta/Blower", state);
+    publishState("P1AM/sta/Blower", state, true);
     return state;
 }
 
@@ -469,7 +493,7 @@ void processBlower(bool state)
     bt3state = (uint8_t)state;
     bt3latch = (uint8_t)state;
     bt3.setValue(bt3state);
-    publishState("P1AM/sta/Blower", state);
+    publishState("P1AM/sta/Blower", state, true);
 }
 
 void updateBlower(byte *message, u_int8_t len)
@@ -486,7 +510,7 @@ void updatePump1(byte *message, u_int8_t len)
     bt4state = (uint8_t)state;
     bt4latch = (uint8_t)state;
     bt4.setValue(bt4state);
-      //  publishState("P1AM/sta/Pump1", state);
+   publishState("P1AM/sta/Pump1", state, true);
 }
 
 bool Pump1Timer(void *)
@@ -497,7 +521,7 @@ bool Pump1Timer(void *)
     bt5state = (uint8_t)state;
     bt5latch = (uint8_t)state;
     bt5.setValue(bt5state);
-    publishState("P1AM/sta/Pump1", state);
+    publishState("P1AM/sta/Pump1", state, true);
 }
 
 void updatePump2(byte *message, u_int8_t len)
@@ -507,13 +531,13 @@ void updatePump2(byte *message, u_int8_t len)
     bt5state = (uint8_t)state;
     bt5latch = (uint8_t)state;
     bt5.setValue(bt5state);
-    //publishState("P1AM/sta/Pump2", state);
+    publishState("P1AM/sta/Pump2", state, true);
 }
 
 void processPumpCirc(bool state)
 {
     P1.writeDiscrete(state, 1, relayPumpCirc);
-    //publishState("P1AM/sta/PumpCirc", state);
+    publishState("P1AM/sta/PumpCirc", state, true);
     bt8state = (uint8_t)state;
     bt8latch = state;
     bt8.setValue(bt8state);
@@ -531,7 +555,7 @@ void updateOzone(byte *message, u_int8_t len)
 {
     bool state = getState(message, len);
     P1.writeDiscrete(state, 1, relayOzone);
-    publishState("P1AM/sta/Ozone", state);
+    publishState("P1AM/sta/Ozone", state, true);
     OzoneSym(state);
 }
 
@@ -638,11 +662,11 @@ void updateFromPage1()
   P1.writeDiscrete(bt5latch, 1, relayPump2);
   */
 }
-void publishState(char *topic, bool state)
+void publishState(char *topic, bool state, bool retained)
 {
 
     // hltStr.toCharArray(hltChar, hltStr.length()+1);
-    mqtt.publish(topic, BoolToStringOnOff(state).c_str());
+    mqtt.publish(topic, BoolToStringOnOff(state).c_str(), retained);       
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -743,9 +767,9 @@ void bt3PushCallback(void *ptr) // Press event for button b1
 {
     timerBlower.cancel();
     bt3latch = !bt3latch;
-    //P1.writeDiscrete(bt3latch, 1, relayBlower);
-    //bt3state = (uint8_t)bt3latch;
-    //publishState("P1AM/sta/Blower", bt3state);
+    P1.writeDiscrete(bt3latch, 1, relayBlower);
+    bt3state = (uint8_t)bt3latch;
+    publishState("P1AM/sta/Blower", bt3state,true);
 
     processBlower(bt3latch);
 } // End of press event
@@ -762,7 +786,7 @@ void bt4PushCallback(void *ptr) // Press event for button b1
     P1.writeDiscrete(bt4latch, 1, relayPump1);
 
     bt4state = (uint8_t)bt4latch;
-    publishState("P1AM/sta/Pump1", bt4state);
+    publishState("P1AM/sta/Pump1", bt4state, true);
 } // End of press event
 
 void bt4PopCallback(void *ptr) // Release event for button b1
@@ -775,7 +799,7 @@ void bt5PushCallback(void *ptr) // Press event for button b1
     bt5latch = !bt5latch;
     P1.writeDiscrete(bt5latch, 1, relayPump2);
     bt5state = (uint8_t)bt5latch;
-    publishState("P1AM/sta/Pump2", bt5state);
+    publishState("P1AM/sta/Pump2", bt5state, true);
 
 } // End of press event
 
@@ -1252,6 +1276,82 @@ void writeSetpoint(float value)
     Serial1.write(0xff);
 }
 
+
+
+void getJson( const char * host,  const char *path) {
+
+/*
+  if (ethClient.connected()) { //Check WiFi connection status
+   HttpClient http(ethClient);
+
+    
+    int httpCode = http.get(host, path);  //Specify request destination                                                                 //Send the request
+    if (httpCode > 0) { //Check the returning code
+      payload = http.readString();   //Get the request response payload
+
+    }
+
+    http.stop();   //Close connection
+
+  }
+  */
+}
+
+void geolocation() {
+
+  const char path[]=  "/json";
+  const char host[] = "ip-api.com";
+
+  getJson(host, path);
+
+  const size_t capacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(2) + 60;
+  DynamicJsonBuffer jsonBuffer(capacity);
+  JsonObject& root = jsonBuffer.parseObject(payload);
+  root.printTo(Serial);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    return;
+  }
+
+  // Extract values
+  Serial.println(("Response:"));
+  Serial.println(root["lat"].as<char*>());
+  Serial.println(root["lon"].as<char*>());
+  coordinate = String(root["lat"].as<char*>()) + "," + String(root["lon"].as<char*>());
+  //coordinatePrev = "lat=" + String(root["lat"].as<char*>()) + "&lon=" + String(root["lon"].as<char*>()); //do we use this anywhere (?)
+  coordinateTZ = "lat=" + String(root["lat"].as<char*>()) + "&lng=" + String(root["lon"].as<char*>());
+  //mylat = root["lat"];
+  //mylon = root["lon"];
+  // M5.Lcd.println("My Lat/Lon: "+coordinate);
+  Serial.println("My Lat/Lon: " + coordinate);
+}
+
+/*
+   Used to get the GMT offset for your timezone
+*/
+
+void timeZone() {
+  /*
+  const char host[] = "api.timezonedb.com";
+  const char path[]  = "/v2/get-time-zone?key=" + TZAPIKEY + "&format=json&fields=gmtOffset,abbreviation&by=position&" + coordinateTZ;
+  getJson(host, path);
+  StaticJsonBuffer<512> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(payload);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    return;
+  }
+  gmtOffset_sec = root["gmtOffset"];
+  const char* temp1 = root["abbreviation"];
+  TZone = (String)temp1;
+  Serial.print("GMT Offset = ");
+  Serial.print(gmtOffset_sec);
+  Serial.println(" " + TZone);
+  //M5.Lcd.println("GMT Offset = "+(String)gmtOffset_sec);
+  */
+}
+
+
 void loop()
 { // the loop routine runs over and over again forever:
     timeNow = millis();
@@ -1299,8 +1399,8 @@ void loop()
         addTemp = iic_dataStruct.addTemp;
         heaterTemp = iic_dataStruct.heaterTemp;
         writetubTemp(tubTemp);
-        writeHeaterTemp(addTemp);
-        writeAmbTemp(heaterTemp);
+        writeHeaterTemp(heaterTemp);
+        writeAmbTemp(addTemp);
 
         haveData = false;
 
@@ -1318,7 +1418,7 @@ void loop()
         // LOOP
         if (!mqtt.connected())
         {
-            Serial.print(" DisFREVed");
+            Serial.print(" Disconnected");
             Serial.println("Tring to connect to MQTT broker");
             reconnect();
         }
@@ -1351,10 +1451,10 @@ void loop()
     heaterTemp = getTempF(heaterSensorAddress);
 */
 
-        mqtt.publish("P1AM/sta/heaterTemp", String(addTemp).c_str());
+        mqtt.publish("P1AM/sta/heaterTemp", String(heaterTemp).c_str());
         mqtt.publish("P1AM/sta/tubTemp", String(tubTemp).c_str());
         mqtt.publish("P1AM/sta/setT", String(tempSetpoint, 1).c_str());
-        mqtt.publish("P1AM/sta/addTemp", String(heaterTemp).c_str());
+        mqtt.publish("P1AM/sta/addTemp", String(addTemp).c_str());
 
         // We are going to send the varable value to the object called n0:
         // After the name o                               f the oect you need to put the dot val because val is the atribute we want to change on that object.
@@ -1391,18 +1491,31 @@ void loop()
 
         Serial.println(String(bt8latch) + " | " + String(flagFlow) + " | " + String(tempPlausible) + " | " + String(tempRXcount) + " | " + String(tempRXTimeLeft));
 
-        if ((((tubTemp - 0.3 < tempSetpoint) || ((tubTemp + 0.3 < tempSetpoint))) && bt8latch && flagFlow && tempPlausible))
-        {
-            activeHeat(53620);
-            P1.writeDiscrete(1, 1, relayHeater);
-            HeaterSym(true);
-        }
-        else
-        {
-            HeaterSym(false);
-            P1.writeDiscrete(0, 1, relayHeater);
-            activeHeat(568);
-        }
+        if ((tubTemp < tempSetpoint - 0.182) &&  !heaterLatch) 
+                heaterLatch = true;
+                      
+          if (((tubTemp > ( tempSetpoint + 0.18))) )
+         {
+               heaterOFF = true;  
+               heaterLatch = false;
+            
+          }
+
+          
+                if( heaterLatch && bt8latch && flagFlow && tempPlausible) {
+            
+                    activeHeat(53620);
+                    P1.writeDiscrete(1, 1, relayHeater);
+                    HeaterSym(true);
+            
+                }
+                else
+                {
+                    HeaterSym(false);
+                    P1.writeDiscrete(0, 1, relayHeater);
+                    activeHeat(568);
+                
+                }
     }
     /*   Serial1.print("n0.val=");  // This is se   the nextion display to set what object name (before the dot) and what atribute (after the dot) are you going to change.
      Serial1.print(String(tubTemp,0));  // Ts is the value  want to send to that object and atribute mention before.

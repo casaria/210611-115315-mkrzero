@@ -1,0 +1,109 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/include",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/Wire",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/P1AM/src",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/ArduinoJson/src",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/NTPClient",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/arduino-timer/src",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/Adafruit NeoPixel",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/Time",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/Ethernet/src",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/PubSubClient/src",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/OneWire",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/lib/Nextion",
+                "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/SD/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SPI",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated-avr-comp",
+                "C:/Users/CASARIA4/.platformio/packages/framework-cmsis/CMSIS/Include",
+                "C:/Users/CASARIA4/.platformio/packages/framework-cmsis-atmel/CMSIS/Device/ATMEL",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/cores/arduino",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/variants/mkrzero",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/HID",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/I2S/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SAMD_AnalogCorrection/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SAMD_BootloaderUpdater/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SBU/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SDU/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SFU/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SNU/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SSU/src",
+                "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/USBHost/src",
+                "C:/Users/CASARIA4/.platformio/packages/tool-unity",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/include",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/Wire",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/P1AM/src",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/ArduinoJson/src",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/NTPClient",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/arduino-timer/src",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/Adafruit NeoPixel",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/Time",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/Ethernet/src",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/PubSubClient/src",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/OneWire",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/lib/Nextion",
+                    "c:/Users/CASARIA4/OneDrive/Documents/PLATFORMIO/Projects/210611-115315-mkrzero/.pio/libdeps/mkrzero/SD/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SPI",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated-avr-comp",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-cmsis/CMSIS/Include",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-cmsis-atmel/CMSIS/Device/ATMEL",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/cores/arduino",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/variants/mkrzero",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/HID",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/I2S/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SAMD_AnalogCorrection/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SAMD_BootloaderUpdater/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SBU/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SDU/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SFU/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SNU/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/SSU/src",
+                    "C:/Users/CASARIA4/.platformio/packages/framework-arduino-samd/libraries/USBHost/src",
+                    "C:/Users/CASARIA4/.platformio/packages/tool-unity",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=50203",
+                "ARDUINO_SAMD_MKRZERO",
+                "__SAMD21G18A__",
+                "USE_ARDUINO_MKR_PIN_LAYOUT",
+                "ARDUINO=10805",
+                "F_CPU=48000000L",
+                "USBCON",
+                "USB_VID=0x2341",
+                "USB_PID=0x804F",
+                "USB_PRODUCT=\"Arduino MKRZERO\"",
+                "USB_MANUFACTURER=\"Arduino\"",
+                "ARDUINO_ARCH_SAMD",
+                ""
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "compilerPath": "C:/Users/CASARIA4/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc.exe",
+            "compilerArgs": [
+                "-mcpu=cortex-m0plus",
+                "-mthumb",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}
