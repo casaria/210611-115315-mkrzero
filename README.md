@@ -6,5 +6,9 @@
 <li>NEXTION 7" touch sceeen HMI</li>
 <li>Mqtt remote control using Mosquitto and</li>
 <li>NODE-RED Dashboard</li>
-Deicated XIAO SAMD module to offloaf tenp data collection utilizing (3) daallass/maxinm 18b20 one wire temp sensor
+Dedicated XIAO SAMD module to offload temp data collection utilizing (3) dallass/maxinm 18b20 one wire temp sensor
 
+Nextion display
+![image](https://user-images.githubusercontent.com/3454011/163068252-e0883a91-bb7c-4c23-a048-e855845cde49.png)
+Node-red dashboard web interface
+![image](https://user-images.githubusercontent.com/3454011/163068832-8f49ebb4-bf04-4edb-85f9-778651073d8d.png)
