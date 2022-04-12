@@ -21,7 +21,7 @@
 #include <SPI.h>
 
 #include <Ethernet.h>
-#include <EthernetClient.h>
+//#include <EthernetClient.h>
 
 #include <SD.h>
 #include <TimeLib.h>
@@ -113,9 +113,7 @@ float TminSet = 80;
 auto timer1 = timer_create_default();      // create a timer with default settings
 auto timer2 = timer_create_default();      ////Timer <> timer5; // save as a
 auto timer3 = timer_create_default();      ////Timer <> timer5; // save as
-auto timerP1 = timer_create_default();     //
-auto timerP2 = timer_create_default();     //
-auto timerP0 = timer_create_default();     //
+auto timerP = timer_create_default();     //
 auto timerBlower = timer_create_default(); //
 auto timerOZwait = timer_create_default(); //
 auto timerOZon = timer_create_default();   //
@@ -123,6 +121,7 @@ uintptr_t tsk_blower, tsk_animate, tsk_edit;
 
 //WiFiUDP ntpUDP;
 //NTPClient timeClient(ntpUDP);
+EthernetClient client;
 
 bool ButtonPushed = false;
 // create a9 timer that hold  s 16 tasks, with millisecond resolution,
@@ -257,6 +256,7 @@ bool heaterOFF = true;
 
 void publishState(char *message, bool state, bool retained);
 void resetSensorCheck();
+bool blowerTO(void *);
 void updatePump1(byte *message, u_int8_t len);
 void updatePump2(byte *message, u_int8_t len);
 void updateBlower(byte *message, u_int8_t len);
@@ -470,22 +470,14 @@ bool getState(byte *message, uint8_t len)
     return state;
 }
 
-bool blowerTO(void *)
-{
-    timerBlower.cancel();
-    bool state = false;
-    P1.writeDiscrete(state, 1, relayBlower);
-    bt3state = (uint8_t)state;
-    bt3latch = (uint8_t)state;
-    bt3.setValue(bt3state);
-    publishState("P1AM/sta/Blower", state, true);
-    return state;
-}
+
 
 void processBlower(bool state)
 {
-    if (state)
-        timerBlower.in(600000, blowerTO);
+    if (state) {
+        timerBlower.cancel();
+        timerBlower.in(6000, blowerTO);
+    }    
     P1.writeDiscrete(state, 1, relayBlower);
     Serial.print("task handle: ");
     Serial.println(String(tsk_blower));
@@ -494,6 +486,13 @@ void processBlower(bool state)
     bt3latch = (uint8_t)state;
     bt3.setValue(bt3state);
     publishState("P1AM/sta/Blower", state, true);
+}
+
+bool blowerTO(void *)
+{
+    bool state = false;
+    processBlower(state);
+    return state;
 }
 
 void updateBlower(byte *message, u_int8_t len)
@@ -510,7 +509,7 @@ void updatePump1(byte *message, u_int8_t len)
     bt4state = (uint8_t)state;
     bt4latch = (uint8_t)state;
     bt4.setValue(bt4state);
-   publishState("P1AM/sta/Pump1", state, true);
+    publishState("P1AM/sta/Pump1", state, true);
 }
 
 bool Pump1Timer(void *)
@@ -765,7 +764,7 @@ void bt2PushCallback(void *ptr) // Press event for button b0
 
 void bt3PushCallback(void *ptr) // Press event for button b1
 {
-    timerBlower.cancel();
+  
     bt3latch = !bt3latch;
     P1.writeDiscrete(bt3latch, 1, relayBlower);
     bt3state = (uint8_t)bt3latch;
@@ -1279,6 +1278,15 @@ void writeSetpoint(float value)
 
 
 void getJson( const char * host,  const char *path) {
+    
+    
+  // Connect to HTTP server
+ 
+  client.setTimeout(10000);
+  if (!client.connect("arduinojson.org", 80)) {
+    Serial.println(F("Connection failed"));
+    return;
+  }
 
 /*
   if (ethClient.connected()) { //Check WiFi connection status
@@ -1368,9 +1376,7 @@ void loop()
     timer2.tick();
     timer1.tick();
     timer3.tick();
-    timerP0.tick();
-    timerP1.tick();
-    timerP2.tick();
+    timerP.tick();
     timerBlower.tick();
     timerOZwait.tick();
     timerOZon.tick();
