@@ -3,10 +3,10 @@
 <b>Arduino controller for Hot Tub (sundance -Jacuzzi) </b>
 <li>MKR Zero arduino - P1AM  Automationdirerct ProductivityOpen Arduino-compatible CPU, microSD card slot>, (1) microB-USB port(s),  24 VDC </li>
 <li>Ethernet  module </li>
-<li>NEXTION 7" touch sceeen HMI</li>
+<li>NEXTION 7" touch screeen HMI</li>
 <li>Mqtt remote control using Mosquitto and</li>
 <li>NODE-RED Dashboard</li>
-Dedicated XIAO SAMD module to offload temp data collection utilizing (3) dallass/maxinm 18b20 one wire temp sensor
+Dedicated XIAO SAMD module to offload temp data collection utilizing (3) dallas/maxinm 18b20 one wire temp sensors
 
 Nextion display
 ![image](https://user-images.githubusercontent.com/3454011/163068252-e0883a91-bb7c-4c23-a048-e855845cde49.png)
